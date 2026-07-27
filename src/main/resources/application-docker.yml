@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: ink-ms-reports
+  
+  datasource:
+    url: jdbc:mysql://mysql:3306/analytics_ms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format-sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 3006
+
+jwt:
+  secret: inklusport2024superSecretKeyForJWTtokenGenerationWith512bitsAlgorithmHS512
+  expiration: 86400000
+
+# 👇 URL DE AUTH EN DOCKER (IMPORTANTE)
+auth:
+  service:
+    url: http://auth-service:3001
+
+users:
+  service:
+    url: http://users-service:3002
+
+sports:
+  service:
+    url: http://sports-service:3003
+
+accessibility:
+  service:
+    url: http://accessibility-service:3004
+
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+
+security:
+  basic:
+    enabled: false
+
+logging:
+  level:
+    com.inklusport.reports: DEBUG
+
+reports:
+  scheduling:
+    enabled: true
+  aggregation:
+    cron: "0 0 1 * * ?"
+  cleanup:
+    cron: "0 0 2 * * SUN"
+    retention-days: 90
