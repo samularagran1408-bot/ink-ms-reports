@@ -6,23 +6,36 @@
     <modelVersion>4.0.0</modelVersion>
     
     <parent>
-        <groupId>com.inklusport</groupId>
-        <artifactId>inklusport-microservicios</artifactId>
-        <version>1.0.0</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.4</version>
+        <relativePath/>
     </parent>
 
+    <groupId>com.inklusport</groupId>
     <artifactId>ink-ms-reports</artifactId>
+    <version>1.0.0</version>
     <name>ink-ms-reports</name>
     <description>Microservicio de Reportes y Analítica para InkluSport</description>
 
-    <dependencies>
-        <!-- Common -->
-        <dependency>
-            <groupId>com.inklusport</groupId>
-            <artifactId>ink-ms-common</artifactId>
-            <version>1.0.0</version>
-        </dependency>
+    <properties>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.1</spring-cloud.version>
+    </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

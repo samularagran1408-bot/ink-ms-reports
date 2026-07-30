@@ -10,7 +10,7 @@ spring:
     open-in-view: false
 
 jwt:
-  secret: inklusport2024superSecretKeyForJWTtokenGenerationWith512bitsAlgorithmHS512
+  secret: test-only-secret-not-used-anywhere-else-padded-to-512-bits-for-HS512-aaaaaaaaaaaa
   expiration: 86400000
 
 reports:

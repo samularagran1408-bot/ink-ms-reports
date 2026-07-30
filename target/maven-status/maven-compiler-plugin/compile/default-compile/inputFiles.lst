@@ -1,33 +1,33 @@
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\config\SecurityConfig.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\exception\GlobalExceptionHandler.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\entity\DailyMetricsSummary.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\entity\AnalyticsEvent.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\client\SportsServiceFallback.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\entity\ReportConfig.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\client\UserServiceClient.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ReportConfigRequest.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ErrorResponse.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\ReportsApplication.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\client\UserServiceFallback.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\repository\AnalyticsEventRepository.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\service\DailyMetricsService.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DashboardFilters.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\AnalyticsEventResponse.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\repository\DailyMetricsSummaryRepository.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\config\JwtAuthenticationFilter.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\controller\AnalyticsController.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\service\AnalyticsScheduledService.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\client\SportsServiceClient.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DailyMetricResponse.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\security\JwtTokenProvider.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\service\ReportService.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\controller\DashboardController.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\config\FeignAuthInterceptor.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ReportRunResponse.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\repository\ReportConfigRepository.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\service\AnalyticsEventService.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ReportConfigResponse.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\controller\ReportController.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DashboardResponse.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\service\DashboardService.java
-C:\Users\Samu\Downloads\inklusport-microservicios\backend\ink-ms-reports\src\main\java\com\inklusport\reports\dto\AnalyticsEventRequest.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\AnalyticsEventResponse.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\security\JwtTokenProvider.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\client\SportsServiceClient.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DashboardFilters.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\entity\DailyMetricsSummary.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\client\UserServiceClient.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\repository\ReportConfigRepository.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\controller\ReportController.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ReportConfigResponse.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\AnalyticsScheduledService.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ErrorResponse.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\DailyMetricsService.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ReportConfigRequest.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\ReportRunResponse.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\ReportService.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\entity\AnalyticsEvent.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\controller\DashboardController.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\entity\ReportConfig.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\controller\AnalyticsController.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DailyMetricResponse.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\DashboardService.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\client\SportsServiceFallback.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\exception\GlobalExceptionHandler.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\ReportsApplication.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\config\JwtAuthenticationFilter.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\repository\AnalyticsEventRepository.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\client\UserServiceFallback.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\AnalyticsEventRequest.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\config\FeignAuthInterceptor.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\repository\DailyMetricsSummaryRepository.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\config\SecurityConfig.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\AnalyticsEventService.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DashboardResponse.java
