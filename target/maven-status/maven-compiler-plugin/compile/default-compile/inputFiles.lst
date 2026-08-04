@@ -15,12 +15,15 @@ C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\ReportService.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\entity\AnalyticsEvent.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\controller\DashboardController.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\PdfExportService.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\entity\ReportConfig.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\controller\AnalyticsController.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\DailyMetricResponse.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\service\DashboardService.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\client\SportsServiceFallback.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\exception\GlobalExceptionHandler.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\AuditLogExportItem.java
+C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\dto\AuditExportRequest.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\ReportsApplication.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\config\JwtAuthenticationFilter.java
 C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports\src\main\java\com\inklusport\reports\repository\AnalyticsEventRepository.java
