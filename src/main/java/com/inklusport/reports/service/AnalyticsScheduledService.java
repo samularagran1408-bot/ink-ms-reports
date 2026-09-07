@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+/**
+ * Tareas programadas de agregación diaria y limpieza de eventos de analítica.
+ */
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "reports.scheduling.enabled", havingValue = "true", matchIfMissing = true)
@@ -30,6 +33,9 @@ public class AnalyticsScheduledService {
     @Value("${reports.cleanup.retention-days:90}")
     private int retentionDays;
 
+    /**
+     * Agrega las métricas del día anterior y las guarda en el resumen diario.
+     */
     @Scheduled(cron = "${reports.aggregation.cron:0 0 1 * * ?}")
     @Transactional
     public void aggregateDailyMetrics() {
@@ -50,6 +56,9 @@ public class AnalyticsScheduledService {
         log.info("Agregación diaria completada para {}: {} eventos", targetDate, totalEvents);
     }
 
+    /**
+     * Elimina eventos de analítica anteriores al periodo de retención configurado.
+     */
     @Scheduled(cron = "${reports.cleanup.cron:0 0 2 * * SUN}")
     @Transactional
     public void cleanupOldEvents() {
@@ -58,6 +67,13 @@ public class AnalyticsScheduledService {
         log.info("Limpieza semanal: {} eventos anteriores a {} eliminados", deleted, cutoff);
     }
 
+    /**
+     * Inserta o actualiza el valor de una métrica diaria.
+     *
+     * @param date       fecha del resumen
+     * @param metricKey  clave de la métrica
+     * @param value      valor agregado
+     */
     private void upsertMetric(LocalDate date, String metricKey, int value) {
         metricsRepository.findBySummaryDateAndMetricKey(date, metricKey)
                 .ifPresentOrElse(

@@ -22,6 +22,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Agrega datos de usuarios y deportes para los paneles del dashboard.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,6 +34,12 @@ public class DashboardService {
     private final UserServiceClient userServiceClient;
     private final SportsServiceClient sportsServiceClient;
 
+    /**
+     * Construye el dashboard general con métricas, tendencias y listados recientes.
+     *
+     * @param filters rango de fechas y filtros de consulta
+     * @return resumen del dashboard
+     */
     public DashboardResponse getDashboard(DashboardFilters filters) {
         LocalDateTime startDate = filters.getStartDate() != null
                 ? filters.getStartDate().atStartOfDay()
@@ -77,6 +86,12 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene los datos del panel de inicio para un usuario.
+     *
+     * @param userId identificador del usuario
+     * @return datos del panel de inicio
+     */
     public PanelDashboardResponse getHomePanel(String userId) {
         List<Map<String, Object>> events = safeList(sportsServiceClient.getEvents());
         List<Map<String, Object>> registrations = userId == null || userId.isBlank()
@@ -97,6 +112,13 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de eventos en modo gestión o inscripción.
+     *
+     * @param userId identificador del usuario
+     * @param mode   {@code manage} para gestión; cualquier otro valor para inscripción
+     * @return datos del panel de eventos
+     */
     public PanelDashboardResponse getEventsPanel(String userId, String mode) {
         boolean manage = "manage".equalsIgnoreCase(mode);
         List<Map<String, Object>> events = manage
@@ -126,6 +148,11 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de asociaciones entre deportes y discapacidades.
+     *
+     * @return datos del panel de asociaciones
+     */
     public PanelDashboardResponse getAssociationsPanel() {
         return PanelDashboardResponse.builder()
                 .sports(safeList(sportsServiceClient.getSports()))
@@ -134,6 +161,12 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de sesiones del entrenador.
+     *
+     * @param trainerId identificador del entrenador
+     * @return rutinas y deportes activos
+     */
     public PanelDashboardResponse getSessionsPanel(String trainerId) {
         List<Map<String, Object>> routines = trainerId == null || trainerId.isBlank()
                 ? List.of()
@@ -144,6 +177,13 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de atletas con espera y asistencia por evento.
+     *
+     * @param organizerId identificador del organizador
+     * @param allEvents   {@code true} para incluir todos los eventos
+     * @return eventos y resúmenes de atletas
+     */
     public PanelDashboardResponse getAthletesPanel(String organizerId, boolean allEvents) {
         List<Map<String, Object>> events = safeList(sportsServiceClient.getEvents());
         if (!allEvents && organizerId != null && !organizerId.isBlank()) {
@@ -174,6 +214,12 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel del entrenador con rutinas, atletas y discapacidades.
+     *
+     * @param trainerId identificador del entrenador
+     * @return métricas y listados del entrenador
+     */
     public PanelDashboardResponse getTrainerPanel(String trainerId) {
         List<Map<String, Object>> routines = trainerId == null || trainerId.isBlank()
                 ? List.of()
@@ -207,6 +253,12 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel del organizador con eventos, aforo y tasa de asistencia.
+     *
+     * @param organizerId identificador del organizador
+     * @return métricas y eventos del organizador
+     */
     public PanelDashboardResponse getOrganizerPanel(String organizerId) {
         List<Map<String, Object>> allEvents = safeList(sportsServiceClient.getEvents());
         List<Map<String, Object>> sports = safeList(sportsServiceClient.getActiveSports());
@@ -249,18 +301,34 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de catálogo de deportes.
+     *
+     * @return listado de deportes
+     */
     public PanelDashboardResponse getSportsPanel() {
         return PanelDashboardResponse.builder()
                 .sports(safeList(sportsServiceClient.getSports()))
                 .build();
     }
 
+    /**
+     * Obtiene el panel de catálogo de discapacidades.
+     *
+     * @return listado de discapacidades
+     */
     public PanelDashboardResponse getDisabilitiesPanel() {
         return PanelDashboardResponse.builder()
                 .disabilities(safeList(sportsServiceClient.getDisabilities()))
                 .build();
     }
 
+    /**
+     * Obtiene el panel de usuarios según el filtro indicado.
+     *
+     * @param filter {@code inactive}, {@code all} o activos por defecto
+     * @return listado de usuarios
+     */
     public PanelDashboardResponse getUsersPanel(String filter) {
         List<Map<String, Object>> users;
         if ("inactive".equalsIgnoreCase(filter)) {
@@ -275,6 +343,11 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de roles y usuarios.
+     *
+     * @return roles y listado de usuarios
+     */
     public PanelDashboardResponse getRolesPanel() {
         return PanelDashboardResponse.builder()
                 .roles(safeList(userServiceClient.getRoles()))
@@ -282,6 +355,11 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de auditoría con métricas, usuarios y bitácora.
+     *
+     * @return datos del panel de auditoría
+     */
     public PanelDashboardResponse getAuditPanel() {
         DashboardResponse dashboard = getDashboard(new DashboardFilters());
         return PanelDashboardResponse.builder()
@@ -293,6 +371,13 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Obtiene el panel de cuestionario de preparación según rol y usuario.
+     *
+     * @param role   rol del usuario
+     * @param userId identificador del usuario
+     * @return deportes activos y datos de preparación
+     */
     public PanelDashboardResponse getQuizPanel(String role, String userId) {
         Map<String, Object> quizPrep = Map.of();
         if (userId != null && !userId.isBlank() && role != null && !role.isBlank()) {
@@ -307,12 +392,24 @@ public class DashboardService {
                 .build();
     }
 
+    /**
+     * Calcula los cupos ocupados de un evento.
+     *
+     * @param event evento con capacidad máxima y disponible
+     * @return plazas ocupadas, o 0 si no hay datos
+     */
     private int occupied(Map<String, Object> event) {
         int max = toInt(event.get("maxCapacity"));
         int available = event.get("availableCapacity") == null ? max : toInt(event.get("availableCapacity"));
         return Math.max(max - available, 0);
     }
 
+    /**
+     * Convierte un valor a entero; si no es numérico, retorna 0.
+     *
+     * @param value valor a convertir
+     * @return entero equivalente
+     */
     private int toInt(Object value) {
         if (value instanceof Number number) {
             return number.intValue();
@@ -327,6 +424,12 @@ public class DashboardService {
         }
     }
 
+    /**
+     * Devuelve una lista segura, sin nulos, o vacía si el origen es {@code null}.
+     *
+     * @param value lista de origen
+     * @return lista filtrada o vacía
+     */
     private List<Map<String, Object>> safeList(List<Map<String, Object>> value) {
         return value == null ? List.of() : value.stream().filter(Objects::nonNull).toList();
     }

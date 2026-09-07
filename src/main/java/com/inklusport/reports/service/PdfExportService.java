@@ -25,6 +25,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Genera exportaciones PDF del dashboard, auditoría y análisis.
+ */
 @Service
 @RequiredArgsConstructor
 public class PdfExportService {
@@ -38,6 +41,12 @@ public class PdfExportService {
 
     private final DashboardService dashboardService;
 
+    /**
+     * Exporta el dashboard a PDF con métricas, tendencia semanal y tipos de evento.
+     *
+     * @param filters filtros del dashboard
+     * @return bytes del PDF generado
+     */
     public byte[] exportDashboard(DashboardFilters filters) {
         DashboardResponse dashboard = dashboardService.getDashboard(filters);
         return buildDocument("Dashboard Report", "SYSTEM INTEGRITY", document -> {
@@ -54,6 +63,12 @@ public class PdfExportService {
         });
     }
 
+    /**
+     * Exporta el listado de bitácora de auditoría a PDF.
+     *
+     * @param request solicitud con los registros a incluir
+     * @return bytes del PDF generado
+     */
     public byte[] exportAuditLogs(AuditExportRequest request) {
         List<AuditLogExportItem> logs = request != null && request.getLogs() != null
                 ? request.getLogs()
@@ -66,6 +81,13 @@ public class PdfExportService {
         });
     }
 
+    /**
+     * Exporta un PDF combinado de métricas del dashboard y bitácora de auditoría.
+     *
+     * @param filters filtros del dashboard
+     * @param request solicitud con los registros de auditoría
+     * @return bytes del PDF generado
+     */
     public byte[] exportAnalysis(DashboardFilters filters, AuditExportRequest request) {
         DashboardResponse dashboard = dashboardService.getDashboard(filters);
         List<AuditLogExportItem> logs = request != null && request.getLogs() != null
@@ -92,11 +114,28 @@ public class PdfExportService {
         });
     }
 
+    /**
+     * Callback para escribir el cuerpo de un documento PDF.
+     */
     @FunctionalInterface
     private interface DocumentWriter {
+        /**
+         * Escribe el contenido del documento.
+         *
+         * @param document documento PDF abierto
+         * @throws DocumentException si falla la escritura
+         */
         void write(Document document) throws DocumentException;
     }
 
+    /**
+     * Crea un PDF A4 horizontal con cabecera y el contenido del escritor.
+     *
+     * @param title   título del documento
+     * @param eyebrow texto de marca sobre el título
+     * @param writer  escritor del cuerpo
+     * @return bytes del PDF
+     */
     private byte[] buildDocument(String title, String eyebrow, DocumentWriter writer) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4.rotate(), 36, 36, 36, 36);
@@ -129,6 +168,13 @@ public class PdfExportService {
         }
     }
 
+    /**
+     * Añade un título de sección al documento.
+     *
+     * @param document documento PDF
+     * @param text     texto del título
+     * @throws DocumentException si falla la escritura
+     */
     private void addSectionTitle(Document document, String text) throws DocumentException {
         Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.DARK_GRAY);
         Paragraph paragraph = new Paragraph(text, font);
@@ -137,17 +183,36 @@ public class PdfExportService {
         document.add(paragraph);
     }
 
+    /**
+     * Crea una línea de metadatos en estilo secundario.
+     *
+     * @param text texto a mostrar
+     * @return párrafo de metadatos
+     */
     private Paragraph metaLine(String text) {
         Font font = FontFactory.getFont(FontFactory.HELVETICA, 9, MUTED);
         return new Paragraph(text, font);
     }
 
+    /**
+     * Crea un espacio vertical en el documento.
+     *
+     * @param points separación posterior en puntos
+     * @return párrafo vacío con espaciado
+     */
     private Paragraph spacer(float points) {
         Paragraph paragraph = new Paragraph(" ");
         paragraph.setSpacingAfter(points);
         return paragraph;
     }
 
+    /**
+     * Construye la tabla de métricas clave del dashboard.
+     *
+     * @param metrics mapa de métricas
+     * @return tabla PDF
+     * @throws DocumentException si falla el armado
+     */
     private PdfPTable buildMetricsTable(Map<String, Integer> metrics) throws DocumentException {
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
@@ -160,6 +225,13 @@ public class PdfExportService {
         return table;
     }
 
+    /**
+     * Añade una celda de métrica con etiqueta y valor.
+     *
+     * @param table tabla destino
+     * @param label etiqueta de la métrica
+     * @param value valor a mostrar
+     */
     private void addMetricCell(PdfPTable table, String label, String value) {
         PdfPCell cell = new PdfPCell();
         cell.setPadding(12);
@@ -176,6 +248,15 @@ public class PdfExportService {
         table.addCell(cell);
     }
 
+    /**
+     * Construye una tabla de dos columnas clave-valor.
+     *
+     * @param keyHeader   encabezado de la clave
+     * @param valueHeader encabezado del valor
+     * @param rows        filas a pintar
+     * @return tabla PDF
+     * @throws DocumentException si falla el armado
+     */
     private PdfPTable buildKeyValueTable(String keyHeader, String valueHeader, List<Map.Entry<String, String>> rows)
             throws DocumentException {
         PdfPTable table = new PdfPTable(2);
@@ -196,6 +277,13 @@ public class PdfExportService {
         return table;
     }
 
+    /**
+     * Construye la tabla de registros de auditoría.
+     *
+     * @param logs registros a exportar
+     * @return tabla PDF
+     * @throws DocumentException si falla el armado
+     */
     private PdfPTable buildAuditTable(List<AuditLogExportItem> logs) throws DocumentException {
         PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
@@ -222,6 +310,12 @@ public class PdfExportService {
         return table;
     }
 
+    /**
+     * Añade una celda de encabezado a la tabla.
+     *
+     * @param table tabla destino
+     * @param text  texto del encabezado
+     */
     private void addHeaderCell(PdfPTable table, String text) {
         Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, MUTED);
         PdfPCell cell = new PdfPCell(new Phrase(text.toUpperCase(), font));
@@ -232,6 +326,13 @@ public class PdfExportService {
         table.addCell(cell);
     }
 
+    /**
+     * Añade una celda de cuerpo, con colspan opcional.
+     *
+     * @param table   tabla destino
+     * @param text    contenido
+     * @param colspan columnas que ocupa
+     */
     private void addBodyCell(PdfPTable table, String text, int colspan) {
         Font font = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.DARK_GRAY);
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
@@ -241,6 +342,12 @@ public class PdfExportService {
         table.addCell(cell);
     }
 
+    /**
+     * Ordena la tendencia semanal por fecha y la convierte a texto.
+     *
+     * @param trend mapa fecha-cantidad
+     * @return entradas ordenadas
+     */
     private List<Map.Entry<String, String>> sortTrend(Map<String, Integer> trend) {
         if (trend == null || trend.isEmpty()) {
             return List.of();
@@ -251,6 +358,12 @@ public class PdfExportService {
                 .toList();
     }
 
+    /**
+     * Convierte un mapa de conteos a filas de texto ordenadas por valor.
+     *
+     * @param map mapa tipo-cantidad
+     * @return entradas listas para la tabla
+     */
     private List<Map.Entry<String, String>> toStringLongMap(Map<String, Long> map) {
         if (map == null || map.isEmpty()) {
             return List.of();
@@ -262,6 +375,13 @@ public class PdfExportService {
                 .toList();
     }
 
+    /**
+     * Obtiene el valor textual de una métrica, o {@code 0} si falta.
+     *
+     * @param metrics mapa de métricas
+     * @param key     clave buscada
+     * @return valor como texto
+     */
     private String valueOf(Map<String, Integer> metrics, String key) {
         if (metrics == null || metrics.get(key) == null) {
             return "0";
@@ -269,6 +389,12 @@ public class PdfExportService {
         return String.valueOf(metrics.get(key));
     }
 
+    /**
+     * Resume los detalles de un registro de auditoría para la tabla.
+     *
+     * @param log registro de auditoría
+     * @return texto resumido
+     */
     private String summarizeDetails(AuditLogExportItem log) {
         String details = safe(log.getDetails());
         String target = firstNonBlank(log.getTargetEmail(), log.getTargetUserId(), "");
@@ -278,6 +404,13 @@ public class PdfExportService {
         return truncate(details, 100);
     }
 
+    /**
+     * Trunca un texto al máximo indicado y usa un guion si está vacío.
+     *
+     * @param value texto original
+     * @param max   longitud máxima
+     * @return texto recortado
+     */
     private String truncate(String value, int max) {
         if (value == null) {
             return "—";
@@ -289,10 +422,22 @@ public class PdfExportService {
         return trimmed.substring(0, max - 1) + "…";
     }
 
+    /**
+     * Normaliza un texto nulo o en blanco a un guion.
+     *
+     * @param value texto original
+     * @return texto recortado o {@code —}
+     */
     private String safe(String value) {
         return value == null || value.isBlank() ? "—" : value.trim();
     }
 
+    /**
+     * Devuelve el primer valor no vacío, o un guion si todos están en blanco.
+     *
+     * @param values candidatos
+     * @return primer texto útil
+     */
     private String firstNonBlank(String... values) {
         for (String value : values) {
             if (value != null && !value.isBlank()) {

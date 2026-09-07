@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Gestiona configuraciones de reportes y su ejecución sobre eventos de analítica.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -30,6 +33,13 @@ public class ReportService {
     private final AnalyticsEventRepository analyticsEventRepository;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Crea una configuración de reporte para el propietario indicado.
+     *
+     * @param ownerId identificador del dueño
+     * @param request datos de la configuración
+     * @return configuración persistida
+     */
     @Transactional
     public ReportConfigResponse createReportConfig(String ownerId, ReportConfigRequest request) {
         ReportConfig config = ReportConfig.builder()
@@ -44,6 +54,14 @@ public class ReportService {
         return convertToResponse(saved);
     }
 
+    /**
+     * Actualiza una configuración de reporte del propietario.
+     *
+     * @param id      identificador de la configuración
+     * @param ownerId identificador del dueño
+     * @param request nuevos datos
+     * @return configuración actualizada
+     */
     @Transactional
     public ReportConfigResponse updateReportConfig(String id, String ownerId, ReportConfigRequest request) {
         ReportConfig config = findOwnedConfig(id, ownerId);
@@ -57,6 +75,12 @@ public class ReportService {
         return convertToResponse(saved);
     }
 
+    /**
+     * Lista las configuraciones de reporte del propietario.
+     *
+     * @param ownerId identificador del dueño
+     * @return configuraciones del usuario
+     */
     @Transactional(readOnly = true)
     public List<ReportConfigResponse> getMyReportConfigs(String ownerId) {
         return reportConfigRepository.findByOwnerId(ownerId).stream()
@@ -64,6 +88,12 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Elimina una configuración de reporte del propietario.
+     *
+     * @param id      identificador de la configuración
+     * @param ownerId identificador del dueño
+     */
     @Transactional
     public void deleteReportConfig(String id, String ownerId) {
         ReportConfig config = findOwnedConfig(id, ownerId);
@@ -71,6 +101,13 @@ public class ReportService {
         log.info("Configuración de reporte eliminada: {}", id);
     }
 
+    /**
+     * Ejecuta un reporte, agrega eventos del periodo y actualiza la última ejecución.
+     *
+     * @param id      identificador de la configuración
+     * @param ownerId identificador del dueño
+     * @return resultado de la ejecución
+     */
     @Transactional
     public ReportRunResponse runReport(String id, String ownerId) {
         ReportConfig config = findOwnedConfig(id, ownerId);
@@ -107,6 +144,13 @@ public class ReportService {
                 .build();
     }
 
+    /**
+     * Busca una configuración y valida que pertenezca al propietario.
+     *
+     * @param id      identificador de la configuración
+     * @param ownerId identificador del dueño
+     * @return configuración encontrada
+     */
     private ReportConfig findOwnedConfig(String id, String ownerId) {
         ReportConfig config = reportConfigRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Configuración no encontrada"));
@@ -118,6 +162,12 @@ public class ReportService {
         return config;
     }
 
+    /**
+     * Parsea el JSON de filtros; si falla, retorna un mapa vacío.
+     *
+     * @param filtersJson filtros serializados
+     * @return mapa de filtros
+     */
     private Map<String, String> parseFilters(String filtersJson) {
         try {
             return objectMapper.readValue(filtersJson, new TypeReference<Map<String, String>>() {});
@@ -127,6 +177,13 @@ public class ReportService {
         }
     }
 
+    /**
+     * Interpreta la fecha de inicio o usa el valor por defecto al inicio del día.
+     *
+     * @param value       fecha en texto
+     * @param defaultDate fecha de respaldo
+     * @return inicio del día
+     */
     private LocalDateTime parseStartDate(String value, LocalDate defaultDate) {
         if (value == null || value.isBlank()) {
             return defaultDate.atStartOfDay();
@@ -138,6 +195,13 @@ public class ReportService {
         }
     }
 
+    /**
+     * Interpreta la fecha de fin o usa el valor por defecto al final del día.
+     *
+     * @param value       fecha en texto
+     * @param defaultDate fecha de respaldo
+     * @return fin del día
+     */
     private LocalDateTime parseEndDate(String value, LocalDate defaultDate) {
         if (value == null || value.isBlank()) {
             return defaultDate.atTime(LocalTime.MAX);
@@ -149,6 +213,12 @@ public class ReportService {
         }
     }
 
+    /**
+     * Convierte una configuración persistida a su DTO de respuesta.
+     *
+     * @param config entidad persistida
+     * @return DTO de la configuración
+     */
     private ReportConfigResponse convertToResponse(ReportConfig config) {
         return ReportConfigResponse.builder()
                 .id(config.getId())

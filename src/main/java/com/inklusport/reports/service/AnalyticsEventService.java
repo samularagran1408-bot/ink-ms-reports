@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de registro y consulta de eventos de analítica.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -69,6 +72,12 @@ public class AnalyticsEventService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene los eventos de analítica filtrados por módulo.
+     *
+     * @param module módulo de origen
+     * @return lista de eventos
+     */
     @Transactional(readOnly = true)
     public List<AnalyticsEventResponse> getEventsByModule(String module) {
         return analyticsEventRepository.findByModule(module).stream()
