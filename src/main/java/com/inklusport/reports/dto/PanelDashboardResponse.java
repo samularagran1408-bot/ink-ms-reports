@@ -29,4 +29,12 @@ public class PanelDashboardResponse {
     private Integer athleteCount;
     private Double attendanceRatePercent;
     private Integer attendanceSampledEvents;
+    private Long eventsTotal;
+    private Integer eventsPage;
+    private Integer eventsSize;
+    private Integer eventsTotalPages;
+    private Long usersTotal;
+    private Integer usersPage;
+    private Integer usersSize;
+    private Integer usersTotalPages;
 }

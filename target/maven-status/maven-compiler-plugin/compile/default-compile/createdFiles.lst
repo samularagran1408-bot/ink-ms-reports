@@ -1,5 +1,6 @@
 com\inklusport\reports\controller\AnalyticsController.class
 com\inklusport\reports\service\ReportService$1.class
+com\inklusport\reports\dto\PanelDashboardResponse.class
 com\inklusport\reports\dto\ReportConfigRequest.class
 com\inklusport\reports\entity\AnalyticsEvent.class
 com\inklusport\reports\dto\AnalyticsEventResponse$AnalyticsEventResponseBuilder.class
@@ -15,9 +16,11 @@ com\inklusport\reports\dto\ReportConfigResponse.class
 com\inklusport\reports\config\SecurityConfig.class
 com\inklusport\reports\dto\ReportConfigResponse$ReportConfigResponseBuilder.class
 com\inklusport\reports\service\DashboardService.class
+com\inklusport\reports\dto\PagedEventsResponse.class
 com\inklusport\reports\dto\AuditLogExportItem.class
 com\inklusport\reports\dto\AnalyticsEventResponse.class
 com\inklusport\reports\entity\ReportConfig.class
+com\inklusport\reports\dto\PagedUsersResponse.class
 com\inklusport\reports\dto\AnalyticsEventRequest.class
 com\inklusport\reports\client\SportsServiceFallback.class
 com\inklusport\reports\controller\ReportController.class
@@ -45,3 +48,4 @@ com\inklusport\reports\client\SportsServiceClient.class
 com\inklusport\reports\dto\DailyMetricResponse$DailyMetricResponseBuilder.class
 com\inklusport\reports\entity\DailyMetricsSummary$DailyMetricsSummaryBuilder.class
 com\inklusport\reports\config\JwtAuthenticationFilter.class
+com\inklusport\reports\dto\PanelDashboardResponse$PanelDashboardResponseBuilder.class

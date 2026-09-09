@@ -55,8 +55,11 @@ public class DashboardController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PanelDashboardResponse> getEventsPanel(
             @RequestParam(value = "userId", required = false) String userId,
-            @RequestParam(value = "mode", required = false, defaultValue = "user") String mode) {
-        return ResponseEntity.ok(dashboardService.getEventsPanel(userId, mode));
+            @RequestParam(value = "mode", required = false, defaultValue = "user") String mode,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+            @RequestParam(value = "q", required = false) String q) {
+        return ResponseEntity.ok(dashboardService.getEventsPanel(userId, mode, page, size, q));
     }
 
     @GetMapping("/associations")
@@ -95,8 +98,12 @@ public class DashboardController {
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PanelDashboardResponse> getUsersPanel(
-            @RequestParam(value = "filter", required = false, defaultValue = "active") String filter) {
-        return ResponseEntity.ok(dashboardService.getUsersPanel(filter));
+            @RequestParam(value = "filter", required = false, defaultValue = "active") String filter,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "disability", required = false) String disability) {
+        return ResponseEntity.ok(dashboardService.getUsersPanel(filter, page, size, name, disability));
     }
 
     @GetMapping("/roles")

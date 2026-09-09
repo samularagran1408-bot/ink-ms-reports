@@ -1,5 +1,6 @@
 package com.inklusport.reports.client;
 
+import com.inklusport.reports.dto.PagedUsersResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,15 @@ public class UserServiceFallback implements UserServiceClient {
     public List<Map<String, Object>> getAllUsers() {
         log.warn("Users MS no disponible. Retornando lista vacía de usuarios.");
         return List.of();
+    }
+
+    @Override
+    public PagedUsersResponse getUsersPage(int page, int size, String filter, String name, String disability) {
+        log.warn("Users MS no disponible. Retornando página vacía de usuarios.");
+        PagedUsersResponse empty = new PagedUsersResponse();
+        empty.setNumber(page);
+        empty.setSize(size);
+        return empty;
     }
 
     @Override

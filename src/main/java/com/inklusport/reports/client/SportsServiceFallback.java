@@ -1,5 +1,6 @@
 package com.inklusport.reports.client;
 
+import com.inklusport.reports.dto.PagedEventsResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,16 @@ public class SportsServiceFallback implements SportsServiceClient {
     @Override
     public List<Map<String, Object>> getAvailableEvents() {
         return List.of();
+    }
+
+    @Override
+    public PagedEventsResponse getEventsPage(
+            int page, int size, String q, String from, String to, Boolean availableOnly, String createdBy) {
+        log.warn("Sports MS no disponible. Retornando página vacía de eventos.");
+        PagedEventsResponse empty = new PagedEventsResponse();
+        empty.setNumber(page);
+        empty.setSize(size);
+        return empty;
     }
 
     @Override

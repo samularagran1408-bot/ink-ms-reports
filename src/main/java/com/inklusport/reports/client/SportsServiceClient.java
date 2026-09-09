@@ -1,5 +1,6 @@
 package com.inklusport.reports.client;
 
+import com.inklusport.reports.dto.PagedEventsResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,16 @@ public interface SportsServiceClient {
 
     @GetMapping("/api/events/available")
     List<Map<String, Object>> getAvailableEvents();
+
+    @GetMapping("/api/events/page")
+    PagedEventsResponse getEventsPage(
+            @RequestParam("page") int page,
+            @RequestParam("size") int size,
+            @RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "from", required = false) String from,
+            @RequestParam(value = "to", required = false) String to,
+            @RequestParam(value = "availableOnly", required = false) Boolean availableOnly,
+            @RequestParam(value = "createdBy", required = false) String createdBy);
 
     @GetMapping("/api/sports")
     List<Map<String, Object>> getSports();

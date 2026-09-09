@@ -4,6 +4,8 @@ import com.inklusport.reports.client.SportsServiceClient;
 import com.inklusport.reports.client.UserServiceClient;
 import com.inklusport.reports.dto.DashboardFilters;
 import com.inklusport.reports.dto.DashboardResponse;
+import com.inklusport.reports.dto.PagedEventsResponse;
+import com.inklusport.reports.dto.PagedUsersResponse;
 import com.inklusport.reports.dto.PanelDashboardResponse;
 import com.inklusport.reports.repository.AnalyticsEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +55,8 @@ public class DashboardService {
         int activeEvents = sportsServiceClient.getActiveEventsCount();
         int totalSports = sportsServiceClient.getTotalSports();
         List<Map<String, Object>> disabilities = safeList(sportsServiceClient.getDisabilities());
-        List<Map<String, Object>> users = safeList(userServiceClient.getAllUsers());
-        List<Map<String, Object>> events = safeList(sportsServiceClient.getEvents());
+        List<Map<String, Object>> users = pagedUsers(0, 6, "all", null, null).getContent();
+        List<Map<String, Object>> events = pagedEvents(0, 8, null, false, null).getContent();
 
         Map<String, Integer> metrics = new HashMap<>();
         metrics.put("total_users", totalUsers);
@@ -93,7 +95,7 @@ public class DashboardService {
      * @return datos del panel de inicio
      */
     public PanelDashboardResponse getHomePanel(String userId) {
-        List<Map<String, Object>> events = safeList(sportsServiceClient.getEvents());
+        List<Map<String, Object>> events = pagedEvents(0, 24, null, true, null).getContent();
         List<Map<String, Object>> registrations = userId == null || userId.isBlank()
                 ? List.of()
                 : safeList(sportsServiceClient.getRegistrationsByUser(userId));
@@ -117,34 +119,29 @@ public class DashboardService {
      *
      * @param userId identificador del usuario
      * @param mode   {@code manage} para gestión; cualquier otro valor para inscripción
-     * @return datos del panel de eventos
+     * @param page  página 0-based
+     * @param size  tamaño de página (sports lo limita a 50)
+     * @param q     texto opcional
      */
-    public PanelDashboardResponse getEventsPanel(String userId, String mode) {
+    public PanelDashboardResponse getEventsPanel(String userId, String mode, int page, int size, String q) {
         boolean manage = "manage".equalsIgnoreCase(mode);
-        List<Map<String, Object>> events = manage
-                ? safeList(sportsServiceClient.getEvents())
-                : safeList(sportsServiceClient.getAvailableEvents());
+        PagedEventsResponse paged = pagedEvents(page, size <= 0 ? 20 : size, q, !manage, null);
+        List<Map<String, Object>> events = paged.getContent();
         List<Map<String, Object>> registrations = !manage && userId != null && !userId.isBlank()
                 ? safeList(sportsServiceClient.getRegistrationsByUser(userId))
                 : List.of();
         List<Map<String, Object>> sports = manage
                 ? safeList(sportsServiceClient.getActiveSports())
                 : List.of();
-        Map<String, List<Map<String, Object>>> waitlists = new HashMap<>();
-        if (manage) {
-            for (Map<String, Object> event : events) {
-                Object id = event.get("id");
-                if (id == null) {
-                    continue;
-                }
-                waitlists.put(String.valueOf(id), safeList(sportsServiceClient.getEventWaitlist(String.valueOf(id))));
-            }
-        }
         return PanelDashboardResponse.builder()
                 .events(events)
                 .registrations(registrations)
                 .sports(sports)
-                .waitlists(waitlists)
+                .waitlists(Map.of())
+                .eventsTotal(paged.getTotalElements())
+                .eventsPage(paged.getNumber())
+                .eventsSize(paged.getSize())
+                .eventsTotalPages(paged.getTotalPages())
                 .build();
     }
 
@@ -185,14 +182,10 @@ public class DashboardService {
      * @return eventos y resúmenes de atletas
      */
     public PanelDashboardResponse getAthletesPanel(String organizerId, boolean allEvents) {
-        List<Map<String, Object>> events = safeList(sportsServiceClient.getEvents());
-        if (!allEvents && organizerId != null && !organizerId.isBlank()) {
-            List<Map<String, Object>> own = events.stream()
-                    .filter(event -> organizerId.equals(String.valueOf(event.get("createdBy"))))
-                    .toList();
-            if (!own.isEmpty()) {
-                events = own;
-            }
+        PagedEventsResponse paged = pagedEvents(0, 20, null, false, allEvents ? null : organizerId);
+        List<Map<String, Object>> events = paged.getContent();
+        if (!allEvents && organizerId != null && !organizerId.isBlank() && events.isEmpty()) {
+            events = pagedEvents(0, 20, null, false, null).getContent();
         }
         List<Map<String, Object>> summaries = new ArrayList<>();
         for (Map<String, Object> event : events) {
@@ -260,16 +253,11 @@ public class DashboardService {
      * @return métricas y eventos del organizador
      */
     public PanelDashboardResponse getOrganizerPanel(String organizerId) {
-        List<Map<String, Object>> allEvents = safeList(sportsServiceClient.getEvents());
+        PagedEventsResponse paged = pagedEvents(0, 50, null, false, organizerId);
         List<Map<String, Object>> sports = safeList(sportsServiceClient.getActiveSports());
-        List<Map<String, Object>> events = allEvents;
-        if (organizerId != null && !organizerId.isBlank()) {
-            List<Map<String, Object>> own = allEvents.stream()
-                    .filter(event -> organizerId.equals(String.valueOf(event.get("createdBy"))))
-                    .toList();
-            if (!own.isEmpty()) {
-                events = own;
-            }
+        List<Map<String, Object>> events = paged.getContent();
+        if (organizerId != null && !organizerId.isBlank() && events.isEmpty()) {
+            events = pagedEvents(0, 50, null, false, null).getContent();
         }
         int athleteCount = events.stream().mapToInt(this::occupied).sum();
         List<Map<String, Object>> sample = events.stream().limit(8).toList();
@@ -326,20 +314,22 @@ public class DashboardService {
     /**
      * Obtiene el panel de usuarios según el filtro indicado.
      *
-     * @param filter {@code inactive}, {@code all} o activos por defecto
+     * @param filter     {@code inactive}, {@code all} o activos por defecto
+     * @param page       página 0-based
+     * @param size       tamaño (users lo limita a 50)
+     * @param name       texto opcional (nombre o email)
+     * @param disability filtro opcional de discapacidad
      * @return listado de usuarios
      */
-    public PanelDashboardResponse getUsersPanel(String filter) {
-        List<Map<String, Object>> users;
-        if ("inactive".equalsIgnoreCase(filter)) {
-            users = safeList(userServiceClient.getInactiveUsersList());
-        } else if ("all".equalsIgnoreCase(filter)) {
-            users = safeList(userServiceClient.getAllUsers());
-        } else {
-            users = safeList(userServiceClient.getActiveUsersList());
-        }
+    public PanelDashboardResponse getUsersPanel(
+            String filter, int page, int size, String name, String disability) {
+        PagedUsersResponse paged = pagedUsers(page, size, filter, name, disability);
         return PanelDashboardResponse.builder()
-                .users(users)
+                .users(paged.getContent())
+                .usersTotal(paged.getTotalElements())
+                .usersPage(paged.getNumber())
+                .usersSize(paged.getSize())
+                .usersTotalPages(paged.getTotalPages())
                 .build();
     }
 
@@ -351,7 +341,7 @@ public class DashboardService {
     public PanelDashboardResponse getRolesPanel() {
         return PanelDashboardResponse.builder()
                 .roles(safeList(userServiceClient.getRoles()))
-                .users(safeList(userServiceClient.getAllUsers()))
+                .users(pagedUsers(0, 50, "all", null, null).getContent())
                 .build();
     }
 
@@ -366,7 +356,7 @@ public class DashboardService {
                 .metrics(dashboard.getMetrics())
                 .eventCounts(dashboard.getEventCounts())
                 .weeklyTrend(dashboard.getWeeklyTrend())
-                .users(safeList(userServiceClient.getAllUsers()))
+                .users(pagedUsers(0, 50, "all", null, null).getContent())
                 .auditLogs(safeList(userServiceClient.getAuditLogs()))
                 .build();
     }
@@ -390,6 +380,50 @@ public class DashboardService {
                 .sports(safeList(sportsServiceClient.getActiveSports()))
                 .quizPrep(quizPrep)
                 .build();
+    }
+
+    /**
+     * Pide una página de eventos a sports-ms. Nunca retorna null.
+     */
+    private PagedEventsResponse pagedEvents(int page, int size, String q, boolean availableOnly, String createdBy) {
+        PagedEventsResponse paged = sportsServiceClient.getEventsPage(
+                Math.max(page, 0),
+                Math.min(Math.max(size, 1), 50),
+                q,
+                null,
+                null,
+                availableOnly,
+                createdBy);
+        if (paged == null) {
+            paged = new PagedEventsResponse();
+        }
+        if (paged.getContent() == null) {
+            paged.setContent(List.of());
+        } else {
+            paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
+        }
+        return paged;
+    }
+
+    /**
+     * Pide una página de usuarios a users-ms. Nunca retorna null.
+     */
+    private PagedUsersResponse pagedUsers(int page, int size, String filter, String name, String disability) {
+        PagedUsersResponse paged = userServiceClient.getUsersPage(
+                Math.max(page, 0),
+                Math.min(Math.max(size, 1), 50),
+                filter,
+                name,
+                disability);
+        if (paged == null) {
+            paged = new PagedUsersResponse();
+        }
+        if (paged.getContent() == null) {
+            paged.setContent(List.of());
+        } else {
+            paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
+        }
+        return paged;
     }
 
     /**
