@@ -1,1 +1,3 @@
+com\inklusport\reports\service\AnalyticsEventServiceTest.class
 com\inklusport\reports\ReportsApplicationTests.class
+com\inklusport\reports\service\PdfExportServiceTest.class

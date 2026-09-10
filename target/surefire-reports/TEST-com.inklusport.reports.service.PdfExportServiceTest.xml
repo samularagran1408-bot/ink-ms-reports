@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.inklusport.reports.ReportsApplicationTests" time="25.608" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.inklusport.reports.service.PdfExportServiceTest" time="2.642" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -65,53 +65,6 @@
     <property name="java.class.version" value="61.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[ink-ms-reports] "/>
   </properties>
-  <testcase name="contextLoads" classname="com.inklusport.reports.ReportsApplicationTests" time="0.962">
-    <system-out><![CDATA[10:29:12.366 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.inklusport.reports.ReportsApplicationTests]: ReportsApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-10:29:12.652 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.inklusport.reports.ReportsApplication for test class com.inklusport.reports.ReportsApplicationTests
-
-  .   ____          _            __ _ _
- /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
-( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
- \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
-  '  |____| .__|_| |_|_| |_\__, | / / / /
- =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::                (v3.2.4)
-
-2026-09-10T10:29:13.931-05:00  INFO 25056 --- [ink-ms-reports] [           main] c.i.reports.ReportsApplicationTests      : Starting ReportsApplicationTests using Java 17.0.19 with PID 25056 (started by Samu in C:\Users\Samu\Documents\Repos Aparte\ink-ms-reports)
-2026-09-10T10:29:13.935-05:00 DEBUG 25056 --- [ink-ms-reports] [           main] c.i.reports.ReportsApplicationTests      : Running with Spring Boot v3.2.4, Spring v6.1.5
-2026-09-10T10:29:13.937-05:00  INFO 25056 --- [ink-ms-reports] [           main] c.i.reports.ReportsApplicationTests      : The following 1 profile is active: "test"
-2026-09-10T10:29:16.714-05:00  INFO 25056 --- [ink-ms-reports] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-09-10T10:29:16.917-05:00  INFO 25056 --- [ink-ms-reports] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 179 ms. Found 3 JPA repository interfaces.
-2026-09-10T10:29:17.682-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=6b0904e3-5e81-3802-a456-4b5b15b29f71
-2026-09-10T10:29:19.649-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-09-10T10:29:20.334-05:00  INFO 25056 --- [ink-ms-reports] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
-2026-09-10T10:29:20.484-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-09-10T10:29:21.193-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-09-10T10:29:21.245-05:00  INFO 25056 --- [ink-ms-reports] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-09-10T10:29:21.595-05:00  INFO 25056 --- [ink-ms-reports] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:reports_test user=SA
-2026-09-10T10:29:21.598-05:00  INFO 25056 --- [ink-ms-reports] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-09-10T10:29:21.652-05:00  WARN 25056 --- [ink-ms-reports] [           main] org.hibernate.dialect.Dialect            : HHH000511: The 2.2.0 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly. The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
-2026-09-10T10:29:21.663-05:00  WARN 25056 --- [ink-ms-reports] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-09-10T10:29:23.300-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-Hibernate: drop table if exists analytics_events
-Hibernate: drop table if exists daily_metrics_summary
-Hibernate: drop table if exists report_configs
-Hibernate: create table analytics_events (created_at datetime(6), event_type varchar(50) not null, module varchar(50) not null, id CHAR(36) not null, metadata JSON, user_id CHAR(36), primary key (id)) engine=InnoDB
-Hibernate: create table daily_metrics_summary (metric_value integer not null, summary_date date not null, updated_at datetime(6), metric_key varchar(50) not null, id CHAR(36) not null, primary key (id)) engine=InnoDB
-Hibernate: create table report_configs (created_at datetime(6), last_run datetime(6), report_name varchar(100) not null, filters JSON not null, id CHAR(36) not null, owner_id CHAR(36) not null, primary key (id)) engine=InnoDB
-Hibernate: create index idx_events_type_date on analytics_events (event_type, created_at)
-Hibernate: create index idx_metrics_key_date on daily_metrics_summary (metric_key, summary_date)
-2026-09-10T10:29:23.376-05:00  INFO 25056 --- [ink-ms-reports] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-09-10T10:29:27.254-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
-2026-09-10T10:29:31.335-05:00  WARN 25056 --- [ink-ms-reports] [           main] .s.s.UserDetailsServiceAutoConfiguration : 
-
-Using generated security password: bedbde69-4988-4c6d-a5a2-69236755a63d
-
-This generated password is for development use only. Your security configuration must be updated before running your application in production.
-
-2026-09-10T10:29:33.978-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint(s) beneath base path '/actuator'
-2026-09-10T10:29:34.398-05:00  INFO 25056 --- [ink-ms-reports] [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@397fd951, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6d2fe236, org.springframework.security.web.context.SecurityContextHolderFilter@46eb5c0c, org.springframework.security.web.header.HeaderWriterFilter@702f99a5, org.springframework.security.web.authentication.logout.LogoutFilter@18e69455, com.inklusport.reports.config.JwtAuthenticationFilter@48614fb3, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@1b84d2e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@b8da646, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@68c7162b, org.springframework.security.web.session.SessionManagementFilter@3a95898c, org.springframework.security.web.access.ExceptionTranslationFilter@6c861b25, org.springframework.security.web.access.intercept.AuthorizationFilter@327dcf8c]
-2026-09-10T10:29:36.438-05:00  INFO 25056 --- [ink-ms-reports] [           main] c.i.reports.ReportsApplicationTests      : Started ReportsApplicationTests in 23.428 seconds (process running for 26.145)
-]]></system-out>
-  </testcase>
+  <testcase name="exportAuditLogs_generaPdfConRegistros" classname="com.inklusport.reports.service.PdfExportServiceTest" time="2.591"/>
+  <testcase name="exportAuditLogs_aceptaRequestNulo" classname="com.inklusport.reports.service.PdfExportServiceTest" time="0.025"/>
 </testsuite>
