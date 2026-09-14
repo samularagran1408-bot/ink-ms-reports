@@ -159,18 +159,47 @@ public class DashboardService {
     }
 
     /**
-     * Obtiene el panel de sesiones del entrenador.
+     * Obtiene el panel de sesiones del entrenador, con inscritos y asistencia por rutina.
      *
      * @param trainerId identificador del entrenador
-     * @return rutinas y deportes activos
+     * @return rutinas, deportes activos y resúmenes de inscritos
      */
     public PanelDashboardResponse getSessionsPanel(String trainerId) {
         List<Map<String, Object>> routines = trainerId == null || trainerId.isBlank()
                 ? List.of()
                 : safeList(sportsServiceClient.getRoutinesByTrainer(trainerId));
+        List<Map<String, Object>> summaries = new ArrayList<>();
+        for (Map<String, Object> routine : routines) {
+            Object id = routine.get("id");
+            if (id == null) {
+                continue;
+            }
+            List<Map<String, Object>> registrations = safeList(
+                    sportsServiceClient.getRoutineRegistrations(String.valueOf(id)));
+            int enrolled = 0;
+            int attended = 0;
+            for (Map<String, Object> registration : registrations) {
+                String status = String.valueOf(registration.get("status"));
+                if ("cancelled".equalsIgnoreCase(status)) {
+                    continue;
+                }
+                enrolled++;
+                if ("completed".equalsIgnoreCase(status)) {
+                    attended++;
+                }
+            }
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("routine", routine);
+            summary.put("registrations", registrations);
+            summary.put("enrolledCount", enrolled);
+            summary.put("attendedCount", attended);
+            summary.put("absentCount", Math.max(enrolled - attended, 0));
+            summaries.add(summary);
+        }
         return PanelDashboardResponse.builder()
                 .routines(routines)
                 .sports(safeList(sportsServiceClient.getActiveSports()))
+                .sessionSummaries(summaries)
                 .build();
     }
 

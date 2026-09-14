@@ -20,6 +20,7 @@ public class PanelDashboardResponse {
     private List<Map<String, Object>> associations;
     private Map<String, List<Map<String, Object>>> waitlists;
     private List<Map<String, Object>> athleteSummaries;
+    private List<Map<String, Object>> sessionSummaries;
     private List<Map<String, Object>> users;
     private List<Map<String, Object>> roles;
     private List<Map<String, Object>> auditLogs;
