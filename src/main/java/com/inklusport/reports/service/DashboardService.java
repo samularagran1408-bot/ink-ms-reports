@@ -13,16 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Agrega datos de usuarios y deportes para los paneles del dashboard.
@@ -43,20 +41,23 @@ public class DashboardService {
      * @return resumen del dashboard
      */
     public DashboardResponse getDashboard(DashboardFilters filters) {
-        LocalDateTime startDate = filters.getStartDate() != null
-                ? filters.getStartDate().atStartOfDay()
-                : LocalDateTime.now().minusDays(30);
-        LocalDateTime endDate = filters.getEndDate() != null
-                ? filters.getEndDate().atTime(LocalTime.MAX)
-                : LocalDateTime.now();
-
         int totalUsers = userServiceClient.getTotalUsers();
         int activeUsers = userServiceClient.getActiveUsers();
         int activeEvents = sportsServiceClient.getActiveEventsCount();
         int totalSports = sportsServiceClient.getTotalSports();
         List<Map<String, Object>> disabilities = safeList(sportsServiceClient.getDisabilities());
         List<Map<String, Object>> users = pagedUsers(0, 6, "all", null, null).getContent();
-        List<Map<String, Object>> events = pagedEvents(0, 8, null, false, null).getContent();
+        List<Map<String, Object>> events = safeList(sportsServiceClient.getEvents());
+        if (events.isEmpty()) {
+            events = pagedEvents(0, 50, null, false, null).getContent();
+        }
+
+        int inscriptions = events.stream().mapToInt(this::occupied).sum();
+        int capacity = events.stream().mapToInt(event -> toInt(event.get("maxCapacity"))).sum();
+        int freeSpots = events.stream().mapToInt(event -> {
+            int max = toInt(event.get("maxCapacity"));
+            return event.get("availableCapacity") == null ? max : toInt(event.get("availableCapacity"));
+        }).sum();
 
         Map<String, Integer> metrics = new HashMap<>();
         metrics.put("total_users", totalUsers);
@@ -64,27 +65,20 @@ public class DashboardService {
         metrics.put("active_events", activeEvents);
         metrics.put("total_sports", totalSports);
         metrics.put("total_disabilities", disabilities.size());
+        metrics.put("total_events", events.size());
+        metrics.put("inscriptions", inscriptions);
+        metrics.put("free_spots", freeSpots);
+        metrics.put("occupancy_pct", capacity <= 0 ? 0 : Math.round(inscriptions * 100f / capacity));
 
-        List<Object[]> eventCountsRaw = analyticsEventRepository.countByEventTypeAndDateRange(startDate, endDate);
-        Map<String, Long> eventCounts = eventCountsRaw.stream()
-                .collect(Collectors.toMap(
-                        row -> (String) row[0],
-                        row -> (Long) row[1]
-                ));
-
-        Map<String, Integer> weeklyTrend = new HashMap<>();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
-            long count = analyticsEventRepository.countByDateRange(date.atStartOfDay(), date.atTime(LocalTime.MAX));
-            weeklyTrend.put(date.toString(), (int) count);
-        }
+        Map<String, Long> eventCounts = countBySport(events);
+        Map<String, Integer> weeklyTrend = weeklyActivity(events, List.of());
 
         return DashboardResponse.builder()
                 .metrics(metrics)
                 .eventCounts(eventCounts)
                 .weeklyTrend(weeklyTrend)
                 .recentUsers(users.stream().limit(6).toList())
-                .recentEvents(events.stream().limit(4).toList())
+                .recentEvents(events.stream().limit(6).toList())
                 .build();
     }
 
@@ -248,12 +242,18 @@ public class DashboardService {
                 : safeList(sportsServiceClient.getRoutinesByTrainer(trainerId));
         List<Map<String, Object>> disabilities = safeList(sportsServiceClient.getActiveDisabilities());
         Set<String> athleteIds = new HashSet<>();
+        List<Map<String, Object>> enrollments = new ArrayList<>();
+        int occupiedSeats = 0;
+        int routineCapacity = 0;
         for (Map<String, Object> routine : routines) {
+            occupiedSeats += occupied(routine);
+            routineCapacity += toInt(routine.get("maxCapacity"));
             Object id = routine.get("id");
             if (id == null) {
                 continue;
             }
             for (Map<String, Object> registration : safeList(sportsServiceClient.getRoutineRegistrations(String.valueOf(id)))) {
+                enrollments.add(registration);
                 Object userId = registration.get("userId");
                 if (userId != null) {
                     athleteIds.add(String.valueOf(userId));
@@ -265,13 +265,20 @@ public class DashboardService {
         metrics.put("published", (int) routines.stream()
                 .filter(routine -> "published".equals(String.valueOf(routine.get("status"))))
                 .count());
+        metrics.put("drafts", (int) routines.stream()
+                .filter(routine -> !"published".equals(String.valueOf(routine.get("status"))))
+                .count());
         metrics.put("athletes", athleteIds.size());
+        metrics.put("enrollments", enrollments.size());
         metrics.put("disabilities", disabilities.size());
+        metrics.put("occupancy_pct", routineCapacity <= 0 ? 0 : Math.round(occupiedSeats * 100f / routineCapacity));
         return PanelDashboardResponse.builder()
                 .metrics(metrics)
                 .routines(routines)
                 .disabilities(disabilities)
                 .athleteCount(athleteIds.size())
+                .weeklyTrend(weeklyActivity(routines, enrollments))
+                .eventCounts(countByKey(routines, "disabilityFocus", "General"))
                 .build();
     }
 
@@ -289,6 +296,19 @@ public class DashboardService {
             events = pagedEvents(0, 50, null, false, null).getContent();
         }
         int athleteCount = events.stream().mapToInt(this::occupied).sum();
+        int capacity = events.stream().mapToInt(event -> toInt(event.get("maxCapacity"))).sum();
+        int upcoming = 0;
+        int finished = 0;
+        LocalDate today = LocalDate.now();
+        for (Map<String, Object> event : events) {
+            String status = String.valueOf(event.getOrDefault("status", "")).toLowerCase();
+            LocalDate day = parseDay(event.get("eventDate"));
+            if ("finished".equals(status) || "cancelled".equals(status) || (day != null && day.isBefore(today))) {
+                finished++;
+            } else {
+                upcoming++;
+            }
+        }
         List<Map<String, Object>> sample = events.stream().limit(8).toList();
         int registered = 0;
         int attended = 0;
@@ -308,6 +328,10 @@ public class DashboardService {
         Map<String, Integer> metrics = new HashMap<>();
         metrics.put("active_events", sportsServiceClient.getActiveEventsCount());
         metrics.put("athletes", athleteCount);
+        metrics.put("upcoming", upcoming);
+        metrics.put("finished", finished);
+        metrics.put("occupancy_pct", capacity <= 0 ? 0 : Math.round(athleteCount * 100f / capacity));
+        metrics.put("sports", sports.size());
         return PanelDashboardResponse.builder()
                 .metrics(metrics)
                 .events(events)
@@ -315,6 +339,8 @@ public class DashboardService {
                 .athleteCount(athleteCount)
                 .attendanceRatePercent(sample.isEmpty() ? null : rate)
                 .attendanceSampledEvents(sample.size())
+                .weeklyTrend(weeklyActivity(events, List.of()))
+                .eventCounts(countBySport(events))
                 .build();
     }
 
@@ -465,6 +491,165 @@ public class DashboardService {
         int max = toInt(event.get("maxCapacity"));
         int available = event.get("availableCapacity") == null ? max : toInt(event.get("availableCapacity"));
         return Math.max(max - available, 0);
+    }
+
+    /**
+     * Actividad de 7 días: eventos programados o creados + inscripciones (cupos ocupados).
+     * Prefiere la semana actual; si está vacía, la próxima; si no, la ventana con más actividad.
+     */
+    private Map<String, Integer> weeklyActivity(
+            List<Map<String, Object>> items,
+            List<Map<String, Object>> extraDates) {
+        LocalDate today = LocalDate.now();
+        Map<String, Integer> past = fillWeek(today.minusDays(6), items, extraDates);
+        if (hasPositive(past)) {
+            return past;
+        }
+        Map<String, Integer> next = fillWeek(today, items, extraDates);
+        if (hasPositive(next)) {
+            return next;
+        }
+        LocalDate densest = densestWeekStart(items, extraDates);
+        return densest == null ? past : fillWeek(densest, items, extraDates);
+    }
+
+    private boolean hasPositive(Map<String, Integer> trend) {
+        return trend.values().stream().anyMatch(value -> value != null && value > 0);
+    }
+
+    private LocalDate densestWeekStart(
+            List<Map<String, Object>> items,
+            List<Map<String, Object>> extraDates) {
+        List<LocalDate> days = new ArrayList<>();
+        for (Map<String, Object> item : items) {
+            LocalDate eventDay = parseDay(firstPresent(item.get("eventDate"), item.get("sessionDate")));
+            if (eventDay != null) {
+                days.add(eventDay);
+            }
+            LocalDate created = parseDay(item.get("createdAt"));
+            if (created != null) {
+                days.add(created);
+            }
+        }
+        if (extraDates != null) {
+            for (Map<String, Object> row : extraDates) {
+                LocalDate day = parseDay(firstPresent(
+                        row.get("registrationDate"),
+                        row.get("createdAt"),
+                        row.get("enrolledAt"),
+                        row.get("registeredAt")));
+                if (day != null) {
+                    days.add(day);
+                }
+            }
+        }
+        if (days.isEmpty()) {
+            return null;
+        }
+        LocalDate min = days.stream().min(LocalDate::compareTo).orElse(null);
+        LocalDate max = days.stream().max(LocalDate::compareTo).orElse(null);
+        if (min == null || max == null) {
+            return null;
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate best = min;
+        int bestScore = -1;
+        long bestDist = Long.MAX_VALUE;
+        for (LocalDate start = min; !start.isAfter(max); start = start.plusDays(1)) {
+            LocalDate end = start.plusDays(6);
+            int score = 0;
+            for (LocalDate day : days) {
+                if (!day.isBefore(start) && !day.isAfter(end)) {
+                    score++;
+                }
+            }
+            long dist = Math.abs(java.time.temporal.ChronoUnit.DAYS.between(today, start));
+            if (score > bestScore || (score == bestScore && dist < bestDist)) {
+                bestScore = score;
+                bestDist = dist;
+                best = start;
+            }
+        }
+        return bestScore <= 0 ? null : best;
+    }
+
+    private Map<String, Integer> fillWeek(
+            LocalDate start,
+            List<Map<String, Object>> items,
+            List<Map<String, Object>> extraDates) {
+        Map<String, Integer> trend = new LinkedHashMap<>();
+        for (int i = 0; i < 7; i++) {
+            trend.put(start.plusDays(i).toString(), 0);
+        }
+        for (Map<String, Object> item : items) {
+            LocalDate eventDay = parseDay(firstPresent(item.get("eventDate"), item.get("sessionDate")));
+            if (eventDay != null && trend.containsKey(eventDay.toString())) {
+                trend.merge(eventDay.toString(), 1 + occupied(item), Integer::sum);
+            }
+            LocalDate created = parseDay(item.get("createdAt"));
+            if (created != null && trend.containsKey(created.toString()) && !created.equals(eventDay)) {
+                int weight = eventDay == null ? 1 + occupied(item) : 1;
+                trend.merge(created.toString(), weight, Integer::sum);
+            }
+        }
+        if (extraDates != null) {
+            for (Map<String, Object> row : extraDates) {
+                LocalDate day = parseDay(firstPresent(
+                        row.get("registrationDate"),
+                        row.get("createdAt"),
+                        row.get("enrolledAt")));
+                if (day != null && trend.containsKey(day.toString())) {
+                    trend.merge(day.toString(), 1, Integer::sum);
+                }
+            }
+        }
+        return trend;
+    }
+
+    private Map<String, Long> countBySport(List<Map<String, Object>> events) {
+        return countByKey(events, "sportName", "Sin deporte");
+    }
+
+    private Map<String, Long> countByKey(List<Map<String, Object>> items, String key, String fallback) {
+        Map<String, Long> counts = new HashMap<>();
+        for (Map<String, Object> item : items) {
+            String label = String.valueOf(item.getOrDefault(key, fallback));
+            if (label.isBlank() || "null".equalsIgnoreCase(label)) {
+                label = fallback;
+            }
+            counts.merge(label, 1L, Long::sum);
+        }
+        return counts;
+    }
+
+    private LocalDate parseDay(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String raw = String.valueOf(value).trim();
+        if (raw.isEmpty() || "null".equalsIgnoreCase(raw)) {
+            return null;
+        }
+        if (raw.length() >= 10) {
+            try {
+                return LocalDate.parse(raw.substring(0, 10));
+            } catch (Exception ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private Object firstPresent(Object... values) {
+        if (values == null) {
+            return null;
+        }
+        for (Object value : values) {
+            if (value != null && !String.valueOf(value).isBlank() && !"null".equalsIgnoreCase(String.valueOf(value))) {
+                return value;
+            }
+        }
+        return null;
     }
 
     /**
