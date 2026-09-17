@@ -10,6 +10,9 @@ import com.inklusport.reports.dto.PanelDashboardResponse;
 import com.inklusport.reports.repository.AnalyticsEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -119,7 +122,12 @@ public class DashboardService {
      */
     public PanelDashboardResponse getEventsPanel(String userId, String mode, int page, int size, String q) {
         boolean manage = "manage".equalsIgnoreCase(mode);
-        PagedEventsResponse paged = pagedEvents(page, size <= 0 ? 20 : size, q, !manage, null);
+        // Gestión: organizador solo ve eventos que él creó; admin ve todos.
+        String createdBy = null;
+        if (manage && !isAdmin() && userId != null && !userId.isBlank()) {
+            createdBy = userId.trim();
+        }
+        PagedEventsResponse paged = pagedEvents(page, size <= 0 ? 20 : size, q, !manage, createdBy);
         List<Map<String, Object>> events = paged.getContent();
         List<Map<String, Object>> registrations = !manage && userId != null && !userId.isBlank()
                 ? safeList(sportsServiceClient.getRegistrationsByUser(userId))
@@ -205,11 +213,16 @@ public class DashboardService {
      * @return eventos y resúmenes de atletas
      */
     public PanelDashboardResponse getAthletesPanel(String organizerId, boolean allEvents) {
-        PagedEventsResponse paged = pagedEvents(0, 20, null, false, allEvents ? null : organizerId);
-        List<Map<String, Object>> events = paged.getContent();
-        if (!allEvents && organizerId != null && !organizerId.isBlank() && events.isEmpty()) {
-            events = pagedEvents(0, 20, null, false, null).getContent();
+        // Sin fallback a catálogo global: organizador sin eventos propios → lista vacía.
+        String ownerFilter = allEvents ? null : (organizerId == null || organizerId.isBlank() ? null : organizerId.trim());
+        if (!allEvents && (organizerId == null || organizerId.isBlank())) {
+            return PanelDashboardResponse.builder()
+                    .events(List.of())
+                    .athleteSummaries(List.of())
+                    .build();
         }
+        PagedEventsResponse paged = pagedEvents(0, 20, null, false, ownerFilter);
+        List<Map<String, Object>> events = paged.getContent();
         List<Map<String, Object>> summaries = new ArrayList<>();
         for (Map<String, Object> event : events) {
             Object id = event.get("id");
@@ -289,12 +302,24 @@ public class DashboardService {
      * @return métricas y eventos del organizador
      */
     public PanelDashboardResponse getOrganizerPanel(String organizerId) {
-        PagedEventsResponse paged = pagedEvents(0, 50, null, false, organizerId);
+        // Sin fallback a “todos”: si no tiene eventos, la lista queda vacía.
+        String ownerFilter = isAdmin() ? null : (organizerId == null || organizerId.isBlank() ? null : organizerId.trim());
+        if (!isAdmin() && (organizerId == null || organizerId.isBlank())) {
+            return PanelDashboardResponse.builder()
+                    .events(List.of())
+                    .sports(safeList(sportsServiceClient.getActiveSports()))
+                    .metrics(Map.of(
+                            "active_events", 0,
+                            "athletes", 0,
+                            "upcoming", 0,
+                            "finished", 0,
+                            "occupancy_pct", 0,
+                            "sports", 0))
+                    .build();
+        }
+        PagedEventsResponse paged = pagedEvents(0, 50, null, false, ownerFilter);
         List<Map<String, Object>> sports = safeList(sportsServiceClient.getActiveSports());
         List<Map<String, Object>> events = paged.getContent();
-        if (organizerId != null && !organizerId.isBlank() && events.isEmpty()) {
-            events = pagedEvents(0, 50, null, false, null).getContent();
-        }
         int athleteCount = events.stream().mapToInt(this::occupied).sum();
         int capacity = events.stream().mapToInt(event -> toInt(event.get("maxCapacity"))).sum();
         int upcoming = 0;
@@ -326,7 +351,11 @@ public class DashboardService {
         }
         Double rate = registered > 0 ? Math.round((attended * 10000.0) / registered) / 100.0 : 0d;
         Map<String, Integer> metrics = new HashMap<>();
-        metrics.put("active_events", sportsServiceClient.getActiveEventsCount());
+        metrics.put("active_events", isAdmin()
+                ? sportsServiceClient.getActiveEventsCount()
+                : (int) events.stream()
+                        .filter(e -> "active".equalsIgnoreCase(String.valueOf(e.getOrDefault("status", ""))))
+                        .count());
         metrics.put("athletes", athleteCount);
         metrics.put("upcoming", upcoming);
         metrics.put("finished", finished);
@@ -458,6 +487,21 @@ public class DashboardService {
             paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
         }
         return paged;
+    }
+
+    /** Admin ve todos los eventos; organizador solo los propios ({@code createdBy}). */
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities() == null) {
+            return false;
+        }
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            String value = authority.getAuthority();
+            if ("ROLE_ADMIN".equals(value) || "ADMIN".equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
