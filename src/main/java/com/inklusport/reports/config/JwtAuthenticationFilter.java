@@ -55,6 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         if ("ORGANIZADOR".equals(normalized)) {
                             normalized = "ORGANIZER";
                         }
+                        if ("ADMINISTRADOR".equals(normalized)) {
+                            normalized = "ADMIN";
+                        }
                         List<SimpleGrantedAuthority> roleAuthorities = new ArrayList<>();
                         roleAuthorities.add(new SimpleGrantedAuthority("ROLE_" + normalized));
                         if ("ORGANIZER".equals(normalized)) {

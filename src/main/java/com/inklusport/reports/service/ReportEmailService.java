@@ -1,8 +1,8 @@
 package com.inklusport.reports.service;
 
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
  * Envía reportes programados por correo electrónico.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ReportEmailService {
 
@@ -25,20 +24,21 @@ public class ReportEmailService {
     @Value("${mail.enabled:false}")
     private boolean mailEnabled;
 
+    public ReportEmailService(ObjectProvider<JavaMailSender> mailSenderProvider) {
+        this.mailSender = mailSenderProvider.getIfAvailable();
+    }
+
     /**
      * Envía el PDF del reporte semanal. Si el correo está deshabilitado, solo registra el intento.
-     *
-     * @param to       destinatario
-     * @param subject  asunto
-     * @param bodyHtml cuerpo HTML
-     * @param pdfBytes adjunto PDF (opcional)
-     * @param filename nombre del adjunto
-     * @return true si SMTP aceptó el mensaje o si el correo está deshabilitado (modo dry-run)
      */
     public boolean sendWeeklyReport(String to, String subject, String bodyHtml, byte[] pdfBytes, String filename) {
         if (!mailEnabled) {
             log.info("mail.enabled=false: reporte semanal no enviado a {} (dry-run OK)", to);
             return true;
+        }
+        if (mailSender == null) {
+            log.warn("JavaMailSender no disponible; no se envía reporte a {}", to);
+            return false;
         }
         if (to == null || !to.contains("@") || fromEmail == null || fromEmail.isBlank()) {
             log.warn("No se puede enviar reporte semanal: destinatario/remitente inválido");

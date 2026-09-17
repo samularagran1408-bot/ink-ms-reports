@@ -82,8 +82,8 @@ public class JwtTokenProvider {
         } catch (HttpStatusCodeException e) {
             return false;
         } catch (Exception e) {
-            log.warn("No se pudo validar token contra auth-ms: {}", e.getMessage());
-            return false;
+            log.warn("No se pudo validar token contra auth-ms, usando validación local: {}", e.getMessage());
+            return validateTokenLocally(token);
         }
     }
 
