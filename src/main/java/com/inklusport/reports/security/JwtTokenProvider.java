@@ -9,10 +9,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.Key;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,9 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    /**
+     * Lee roles del JWT tolerando List&lt;String&gt; o elementos no tipados.
+     */
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         try {
@@ -52,16 +56,37 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.get("roles", List.class);
+            Object raw = claims.get("roles");
+            if (raw == null) {
+                return List.of();
+            }
+            if (raw instanceof Collection<?> collection) {
+                List<String> roles = new ArrayList<>();
+                for (Object item : collection) {
+                    if (item != null && !item.toString().isBlank()) {
+                        roles.add(item.toString().trim());
+                    }
+                }
+                return roles;
+            }
+            return List.of(raw.toString().trim());
         } catch (Exception e) {
             log.error("Error al obtener roles: {}", e.getMessage());
             return List.of();
         }
     }
 
+    /**
+     * Valida firma/expiración en local (mismo JWT_SECRET que auth).
+     * Si falla, intenta auth-ms; si auth no está o responde error, no bloquea un token localmente válido.
+     */
     public boolean validateToken(String token) {
         if (token == null || token.isBlank()) {
             return false;
+        }
+
+        if (validateTokenLocally(token)) {
+            return true;
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -79,11 +104,9 @@ public class JwtTokenProvider {
                 return Boolean.TRUE.equals(valid);
             }
             return false;
-        } catch (HttpStatusCodeException e) {
-            return false;
         } catch (Exception e) {
-            log.warn("No se pudo validar token contra auth-ms, usando validación local: {}", e.getMessage());
-            return validateTokenLocally(token);
+            log.warn("No se pudo validar token contra auth-ms: {}", e.getMessage());
+            return false;
         }
     }
 
@@ -99,6 +122,8 @@ public class JwtTokenProvider {
             log.error("Token JWT no soportado: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.error("Token JWT vacío: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.error("Token JWT rechazado: {}", e.getMessage());
         }
         return false;
     }

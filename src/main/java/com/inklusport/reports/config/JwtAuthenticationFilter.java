@@ -15,8 +15,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Ignorar endpoints públicos
         if (path.startsWith("/actuator")) {
             filterChain.doFilter(request, response);
             return;
@@ -42,39 +42,63 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = extractToken(request);
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
-            String email = jwtTokenProvider.getEmailFromToken(token);
-            List<String> roles = jwtTokenProvider.getRolesFromToken(token);
+            try {
+                String email = jwtTokenProvider.getEmailFromToken(token);
+                List<String> roles = jwtTokenProvider.getRolesFromToken(token);
+                if (roles == null) {
+                    roles = List.of();
+                }
 
-            if (roles == null) {
-                roles = List.of();
+                List<SimpleGrantedAuthority> authorities = toAuthorities(roles);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(email, token, authorities);
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("Usuario autenticado: {} con roles={} authorities={}", email, roles, authorities);
+            } catch (Exception e) {
+                log.error("Token presente pero no se pudo construir Authentication: {}", e.getMessage());
+                SecurityContextHolder.clearContext();
             }
-
-            List<SimpleGrantedAuthority> authorities = roles.stream()
-                    .flatMap(role -> {
-                        String normalized = role.toUpperCase();
-                        if ("ORGANIZADOR".equals(normalized)) {
-                            normalized = "ORGANIZER";
-                        }
-                        if ("ADMINISTRADOR".equals(normalized)) {
-                            normalized = "ADMIN";
-                        }
-                        List<SimpleGrantedAuthority> roleAuthorities = new ArrayList<>();
-                        roleAuthorities.add(new SimpleGrantedAuthority("ROLE_" + normalized));
-                        if ("ORGANIZER".equals(normalized)) {
-                            roleAuthorities.add(new SimpleGrantedAuthority("ROLE_ORGANIZADOR"));
-                        }
-                        return roleAuthorities.stream();
-                    })
-                    .collect(Collectors.toList());
-
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(email, token, authorities);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Usuario autenticado: {} con roles: {}", email, roles);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Normaliza roles del JWT a authorities Spring (ROLE_*), alineado con users/auth.
+     */
+    private List<SimpleGrantedAuthority> toAuthorities(List<String> roles) {
+        Set<String> normalized = new LinkedHashSet<>();
+        for (String role : roles) {
+            if (role == null || role.isBlank()) {
+                continue;
+            }
+            String value = role.trim().toUpperCase();
+            if (value.startsWith("ROLE_")) {
+                value = value.substring(5);
+            }
+            if ("ADMINISTRADOR".equals(value)) {
+                value = "ADMIN";
+            }
+            if ("ORGANIZER".equals(value)) {
+                normalized.add("ORGANIZADOR");
+                normalized.add("ORGANIZER");
+                continue;
+            }
+            if ("ORGANIZADOR".equals(value)) {
+                normalized.add("ORGANIZADOR");
+                normalized.add("ORGANIZER");
+                continue;
+            }
+            normalized.add(value);
+        }
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String value : normalized) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + value));
+        }
+        return authorities;
     }
 
     private String extractToken(HttpServletRequest request) {

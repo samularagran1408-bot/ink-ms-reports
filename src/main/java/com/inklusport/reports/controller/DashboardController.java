@@ -25,7 +25,7 @@ public class DashboardController {
     private final PdfExportService pdfExportService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZADOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZADOR', 'ORGANIZER')")
     public ResponseEntity<DashboardResponse> getDashboard(@ModelAttribute DashboardFilters filters) {
         return ResponseEntity.ok(dashboardService.getDashboard(filters));
     }
