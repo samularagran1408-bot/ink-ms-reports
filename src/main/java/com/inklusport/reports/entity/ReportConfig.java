@@ -28,8 +28,20 @@ public class ReportConfig {
     @Column(name = "filters", nullable = false, columnDefinition = "JSON")
     private String filters;
 
-    @Column(name = "owner_id", columnDefinition = "CHAR(36)", nullable = false)
+    @Column(name = "owner_id", length = 255, nullable = false)
     private String ownerId;
+
+    /** Si es true, el scheduler envía el reporte por correo según la frecuencia. */
+    @Column(name = "schedule_enabled")
+    private Boolean scheduleEnabled;
+
+    /** Frecuencia de envío: WEEKLY (HU35). */
+    @Column(name = "schedule_frequency", length = 20)
+    private String scheduleFrequency;
+
+    /** Destinatario del correo programado (normalmente el email del JWT). */
+    @Column(name = "recipient_email", length = 255)
+    private String recipientEmail;
 
     @Column(name = "last_run")
     private LocalDateTime lastRun;

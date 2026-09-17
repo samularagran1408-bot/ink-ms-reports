@@ -225,6 +225,9 @@ public class ReportService {
                 .reportName(config.getReportName())
                 .filters(config.getFilters())
                 .ownerId(config.getOwnerId())
+                .scheduleEnabled(Boolean.TRUE.equals(config.getScheduleEnabled()))
+                .scheduleFrequency(config.getScheduleFrequency())
+                .recipientEmail(config.getRecipientEmail())
                 .lastRun(config.getLastRun())
                 .createdAt(config.getCreatedAt())
                 .build();

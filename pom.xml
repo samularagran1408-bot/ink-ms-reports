@@ -104,6 +104,12 @@
             <version>1.3.39</version>
         </dependency>
 
+        <!-- Email (reporte semanal HU35) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

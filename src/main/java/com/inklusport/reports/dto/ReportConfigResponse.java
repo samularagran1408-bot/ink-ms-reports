@@ -15,6 +15,12 @@ public class ReportConfigResponse {
     private String filters;
     
     private String ownerId;
+
+    private Boolean scheduleEnabled;
+
+    private String scheduleFrequency;
+
+    private String recipientEmail;
     
     private LocalDateTime lastRun;
     

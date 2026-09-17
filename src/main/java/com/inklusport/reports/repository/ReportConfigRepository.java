@@ -8,12 +8,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReportConfigRepository extends JpaRepository<ReportConfig, String> {
 
     List<ReportConfig> findByOwnerId(String ownerId);
 
     List<ReportConfig> findByReportNameContainingIgnoreCase(String reportName);
+
+    Optional<ReportConfig> findFirstByOwnerIdAndScheduleFrequency(String ownerId, String scheduleFrequency);
+
+    List<ReportConfig> findByScheduleEnabledTrueAndScheduleFrequency(String scheduleFrequency);
 
     @Modifying
     @Transactional
