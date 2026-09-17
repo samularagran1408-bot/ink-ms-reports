@@ -467,26 +467,63 @@ public class DashboardService {
     }
 
     /**
-     * Pide una página de eventos a sports-ms. Nunca retorna null.
+     * Pide una página de eventos a sports-ms. Si {@code /page} no existe (404
+     * "Evento no encontrado" en imágenes antiguas), usa el listado completo.
      */
     private PagedEventsResponse pagedEvents(int page, int size, String q, boolean availableOnly, String createdBy) {
-        PagedEventsResponse paged = sportsServiceClient.getEventsPage(
-                Math.max(page, 0),
-                Math.min(Math.max(size, 1), 50),
-                q,
-                null,
-                null,
-                availableOnly,
-                createdBy);
-        if (paged == null) {
-            paged = new PagedEventsResponse();
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        try {
+            PagedEventsResponse paged = sportsServiceClient.getEventsPage(
+                    safePage, safeSize, q, null, null, availableOnly, createdBy);
+            if (paged != null && paged.getContent() != null && !paged.getContent().isEmpty()) {
+                paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
+                return paged;
+            }
+        } catch (Exception ex) {
+            log.warn("getEventsPage falló ({}). Usando listado completo como respaldo.", ex.getMessage());
         }
-        if (paged.getContent() == null) {
-            paged.setContent(List.of());
-        } else {
-            paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
+        return pagedEventsFromList(safePage, safeSize, q, availableOnly, createdBy);
+    }
+
+    private PagedEventsResponse pagedEventsFromList(
+            int page, int size, String q, boolean availableOnly, String createdBy) {
+        List<Map<String, Object>> all = List.of();
+        try {
+            all = availableOnly
+                    ? safeList(sportsServiceClient.getAvailableEvents())
+                    : safeList(sportsServiceClient.getEvents());
+        } catch (Exception ex) {
+            log.warn("Listado de eventos falló ({}). Retornando página vacía.", ex.getMessage());
         }
+        if (createdBy != null && !createdBy.isBlank()) {
+            String owner = createdBy.trim();
+            all = all.stream()
+                    .filter(e -> owner.equalsIgnoreCase(String.valueOf(e.getOrDefault("createdBy", ""))))
+                    .toList();
+        }
+        if (q != null && !q.isBlank()) {
+            String needle = q.trim().toLowerCase();
+            all = all.stream().filter(e -> eventMatchesQuery(e, needle)).toList();
+        }
+        int from = Math.min(page * size, all.size());
+        int to = Math.min(from + size, all.size());
+        PagedEventsResponse paged = new PagedEventsResponse();
+        paged.setContent(all.subList(from, to));
+        paged.setTotalElements(all.size());
+        paged.setTotalPages(size <= 0 ? 0 : (int) Math.ceil(all.size() / (double) size));
+        paged.setNumber(page);
+        paged.setSize(size);
+        paged.setFirst(page <= 0);
+        paged.setLast(to >= all.size());
         return paged;
+    }
+
+    private boolean eventMatchesQuery(Map<String, Object> event, String needle) {
+        return List.of("name", "title", "sportName", "location", "city")
+                .stream()
+                .map(key -> String.valueOf(event.getOrDefault(key, "")).toLowerCase())
+                .anyMatch(value -> value.contains(needle));
     }
 
     /** Admin ve todos los eventos; organizador solo los propios ({@code createdBy}). */
@@ -505,24 +542,59 @@ public class DashboardService {
     }
 
     /**
-     * Pide una página de usuarios a users-ms. Nunca retorna null.
+     * Pide una página de usuarios a users-ms. Si {@code /page} no existe (405 en
+     * imágenes antiguas) o Feign falla, usa {@code GET /api/admin/users} y pagina en memoria.
      */
     private PagedUsersResponse pagedUsers(int page, int size, String filter, String name, String disability) {
-        PagedUsersResponse paged = userServiceClient.getUsersPage(
-                Math.max(page, 0),
-                Math.min(Math.max(size, 1), 50),
-                filter,
-                name,
-                disability);
-        if (paged == null) {
-            paged = new PagedUsersResponse();
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        try {
+            PagedUsersResponse paged = userServiceClient.getUsersPage(
+                    safePage, safeSize, filter, name, disability);
+            if (paged != null && paged.getContent() != null && !paged.getContent().isEmpty()) {
+                paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
+                return paged;
+            }
+        } catch (Exception ex) {
+            log.warn("getUsersPage falló ({}). Usando listado completo como respaldo.", ex.getMessage());
         }
-        if (paged.getContent() == null) {
-            paged.setContent(List.of());
-        } else {
-            paged.setContent(paged.getContent().stream().filter(Objects::nonNull).toList());
+        return pagedUsersFromList(safePage, safeSize, filter);
+    }
+
+    private PagedUsersResponse pagedUsersFromList(int page, int size, String filter) {
+        List<Map<String, Object>> all = List.of();
+        try {
+            all = safeList(userServiceClient.getAllUsers());
+        } catch (Exception ex) {
+            log.warn("getAllUsers falló ({}). Retornando página vacía.", ex.getMessage());
         }
+        if (filter != null && !"all".equalsIgnoreCase(filter)) {
+            boolean wantActive = "active".equalsIgnoreCase(filter);
+            all = all.stream()
+                    .filter(u -> wantActive == toBoolean(u.get("active"), toBoolean(u.get("isActive"), true)))
+                    .toList();
+        }
+        int from = Math.min(page * size, all.size());
+        int to = Math.min(from + size, all.size());
+        PagedUsersResponse paged = new PagedUsersResponse();
+        paged.setContent(all.subList(from, to));
+        paged.setTotalElements(all.size());
+        paged.setTotalPages(size <= 0 ? 0 : (int) Math.ceil(all.size() / (double) size));
+        paged.setNumber(page);
+        paged.setSize(size);
+        paged.setFirst(page <= 0);
+        paged.setLast(to >= all.size());
         return paged;
+    }
+
+    private boolean toBoolean(Object value, boolean defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        return Boolean.parseBoolean(String.valueOf(value));
     }
 
     /**

@@ -17,6 +17,19 @@ spring:
         format-sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    protocol: ${MAIL_PROTOCOL:smtps}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+
 server:
   port: 3006
 
@@ -41,6 +54,9 @@ sports:
 accessibility:
   service:
     url: ${ACCESSIBILITY_SERVICE_URL:http://accessibility-service:3004}
+
+mail:
+  enabled: ${MAIL_ENABLED:false}
 
 feign:
   circuitbreaker:
@@ -67,3 +83,5 @@ reports:
   cleanup:
     cron: "0 0 2 * * SUN"
     retention-days: 90
+  weekly-email:
+    cron: "0 0 8 * * MON"

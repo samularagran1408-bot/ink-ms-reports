@@ -17,12 +17,29 @@ spring:
         format-sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    protocol: ${MAIL_PROTOCOL:smtps}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+
 server:
   port: 3006
 
 jwt:
   secret: ${JWT_SECRET:inklusport2024superSecretKeyForJWTtokenGenerationWith512bitsAlgorithmHS512}
   expiration: ${JWT_EXPIRATION:86400000}
+
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL:http://localhost:3001}
 
 users:
   service:
@@ -35,6 +52,9 @@ sports:
 accessibility:
   service:
     url: http://localhost:3004
+
+mail:
+  enabled: ${MAIL_ENABLED:false}
 
 feign:
   circuitbreaker:
@@ -58,3 +78,5 @@ reports:
   cleanup:
     cron: "0 0 2 * * SUN"
     retention-days: 90
+  weekly-email:
+    cron: "0 0 8 * * MON"

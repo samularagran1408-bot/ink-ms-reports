@@ -8,10 +8,22 @@ spring:
     hibernate:
       ddl-auto: create-drop
     open-in-view: false
+  mail:
+    host: localhost
+    port: 25
+    username: test@inklusport.local
+    password: test
 
 jwt:
   secret: test-only-secret-not-used-anywhere-else-padded-to-512-bits-for-HS512-aaaaaaaaaaaa
   expiration: 86400000
+
+auth:
+  service:
+    url: http://localhost:3001
+
+mail:
+  enabled: false
 
 reports:
   scheduling:

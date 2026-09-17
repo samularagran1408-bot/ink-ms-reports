@@ -15,18 +15,22 @@ com\inklusport\reports\security\JwtTokenProvider.class
 com\inklusport\reports\dto\ReportConfigResponse.class
 com\inklusport\reports\config\SecurityConfig.class
 com\inklusport\reports\dto\ReportConfigResponse$ReportConfigResponseBuilder.class
+com\inklusport\reports\service\WeeklyReportScheduleService.class
 com\inklusport\reports\service\DashboardService.class
 com\inklusport\reports\dto\PagedEventsResponse.class
 com\inklusport\reports\dto\AuditLogExportItem.class
 com\inklusport\reports\dto\AnalyticsEventResponse.class
 com\inklusport\reports\entity\ReportConfig.class
 com\inklusport\reports\dto\PagedUsersResponse.class
+com\inklusport\reports\service\WeeklyReportScheduler.class
+com\inklusport\reports\dto\WeeklyScheduleResponse.class
 com\inklusport\reports\dto\AnalyticsEventRequest.class
 com\inklusport\reports\client\SportsServiceFallback.class
 com\inklusport\reports\controller\ReportController.class
 com\inklusport\reports\dto\DashboardResponse.class
 com\inklusport\reports\dto\ErrorResponse.class
 com\inklusport\reports\entity\AnalyticsEvent$AnalyticsEventBuilder.class
+com\inklusport\reports\service\ReportEmailService.class
 com\inklusport\reports\service\ReportService.class
 com\inklusport\reports\repository\DailyMetricsSummaryRepository.class
 com\inklusport\reports\service\AnalyticsScheduledService.class
@@ -49,3 +53,4 @@ com\inklusport\reports\dto\DailyMetricResponse$DailyMetricResponseBuilder.class
 com\inklusport\reports\entity\DailyMetricsSummary$DailyMetricsSummaryBuilder.class
 com\inklusport\reports\config\JwtAuthenticationFilter.class
 com\inklusport\reports\dto\PanelDashboardResponse$PanelDashboardResponseBuilder.class
+com\inklusport\reports\dto\WeeklyScheduleResponse$WeeklyScheduleResponseBuilder.class
