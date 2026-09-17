@@ -19,6 +19,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Autentica con el JWT entrante usando validación local (mismo JWT_SECRET que auth).
+ * No depende de que auth-ms responda 200 en /validate.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -33,31 +37,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-
         if (path.startsWith("/actuator")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = extractToken(request);
-
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null && jwtTokenProvider.validateTokenLocally(token)) {
             try {
                 String email = jwtTokenProvider.getEmailFromToken(token);
                 List<String> roles = jwtTokenProvider.getRolesFromToken(token);
-                if (roles == null) {
-                    roles = List.of();
-                }
-
                 List<SimpleGrantedAuthority> authorities = toAuthorities(roles);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(email, token, authorities);
-
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.info("Usuario autenticado: {} con roles={} authorities={}", email, roles, authorities);
+                log.debug("Usuario autenticado: {} authorities={}", email, authorities);
             } catch (Exception e) {
-                log.error("Token presente pero no se pudo construir Authentication: {}", e.getMessage());
+                log.error("No se pudo autenticar JWT: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
             }
         }
@@ -65,33 +62,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Normaliza roles del JWT a authorities Spring (ROLE_*), alineado con users/auth.
-     */
     private List<SimpleGrantedAuthority> toAuthorities(List<String> roles) {
         Set<String> normalized = new LinkedHashSet<>();
-        for (String role : roles) {
-            if (role == null || role.isBlank()) {
-                continue;
+        if (roles != null) {
+            for (String role : roles) {
+                if (role == null || role.isBlank()) {
+                    continue;
+                }
+                String value = role.trim().toUpperCase();
+                if (value.startsWith("ROLE_")) {
+                    value = value.substring(5);
+                }
+                if ("ADMINISTRADOR".equals(value)) {
+                    value = "ADMIN";
+                }
+                if ("ORGANIZER".equals(value) || "ORGANIZADOR".equals(value)) {
+                    normalized.add("ORGANIZADOR");
+                    normalized.add("ORGANIZER");
+                    continue;
+                }
+                normalized.add(value);
             }
-            String value = role.trim().toUpperCase();
-            if (value.startsWith("ROLE_")) {
-                value = value.substring(5);
-            }
-            if ("ADMINISTRADOR".equals(value)) {
-                value = "ADMIN";
-            }
-            if ("ORGANIZER".equals(value)) {
-                normalized.add("ORGANIZADOR");
-                normalized.add("ORGANIZER");
-                continue;
-            }
-            if ("ORGANIZADOR".equals(value)) {
-                normalized.add("ORGANIZADOR");
-                normalized.add("ORGANIZER");
-                continue;
-            }
-            normalized.add(value);
         }
 
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
